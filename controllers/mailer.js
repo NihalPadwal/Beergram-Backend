@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import Mailgen from "mailgen";
-
-import ENV from "../config.js";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 // for testing email
 // https://ethereal.email/create

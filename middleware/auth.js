@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import ENV from "../config.js";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 // auth middleware
 export default async function Auth(req, res, next) {
