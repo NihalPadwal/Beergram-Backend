@@ -204,8 +204,6 @@ export async function verifyOTP(req, res) {
 
   const isUser = await UserModel.findOne({ _id: userId });
 
-  console.log(isUser.isAuthenticated);
-
   if (!isUser) {
     return res.status(404).send({ error: "No User Found" });
   }
