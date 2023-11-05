@@ -21,6 +21,7 @@ export const UserSchema = new mongoose.Schema({
   mobile: { type: Number },
   address: { type: Number },
   profile: { type: Number },
+  isAuthenticated: { type: Boolean },
 });
 
 export default mongoose.model.Users || mongoose.model("User", UserSchema);

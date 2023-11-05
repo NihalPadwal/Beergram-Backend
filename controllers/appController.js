@@ -67,6 +67,7 @@ export async function register(req, res) {
                 password: hashedPassword,
                 profile: profile || "",
                 email,
+                isAuthenticated: false,
               });
 
               // return save result as a response
@@ -199,10 +200,32 @@ export async function generateOTP(req, res) {
 
 /** GET: http://localhost:8080/api/verifyOTP */
 export async function verifyOTP(req, res) {
-  const { code } = req.query;
+  const { code, userId } = req.query;
+
+  const isUser = await UserModel.findOne({ _id: userId });
+
+  console.log(isUser.isAuthenticated);
+
+  if (!isUser) {
+    return res.status(404).send({ error: "No User Found" });
+  }
+
+  if (isUser.isAuthenticated) {
+    return res.status(400).send({ error: "User Already Authenticated" });
+  }
+
   if (parseInt(req.app.locals.OTP) === parseInt(code)) {
     req.app.locals.OTP = null; // reset the OTP value
     req.app.locals.resetSession = true; // start session for reset password
+    // update the data
+    UserModel.updateOne(
+      { _id: userId },
+      { isAuthenticated: true },
+      function (err, data) {
+        if (err) throw err;
+        console.log(data);
+      }
+    );
     return res.status(201).send({ msg: "Verify Successsfully!" });
   }
   return res.status(400).send({ error: "Invalid OTP" });
