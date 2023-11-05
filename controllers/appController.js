@@ -208,9 +208,9 @@ export async function verifyOTP(req, res) {
     return res.status(404).send({ error: "No User Found" });
   }
 
-  if (isUser.isAuthenticated) {
-    return res.status(400).send({ error: "User Already Authenticated" });
-  }
+  // if (isUser.isAuthenticated) {
+  //   return res.status(400).send({ error: "User Already Authenticated" });
+  // }
 
   if (parseInt(req.app.locals.OTP) === parseInt(code)) {
     req.app.locals.OTP = null; // reset the OTP value
