@@ -221,7 +221,6 @@ export async function verifyOTP(req, res) {
       { isAuthenticated: true },
       function (err, data) {
         if (err) throw err;
-        console.log(data);
       }
     );
     return res.status(201).send({ msg: "Verify Successsfully!" });
