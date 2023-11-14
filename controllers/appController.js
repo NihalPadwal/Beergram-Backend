@@ -319,7 +319,7 @@ export async function generateOTP(req, res) {
       );
 
       // all went good return status 201
-      res.status(201).send({ msg: `OTP is sent` });
+      res.status(201).send({ msg: `OTP is sent`, code: otp });
     });
   } catch (error) {
     return res.status(500).send(error);
