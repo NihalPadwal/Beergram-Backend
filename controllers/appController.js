@@ -75,6 +75,7 @@ export async function register(req, res) {
               user
                 .save()
                 .then(async (result) => {
+                  // console.log(result);
                   const user = await UserModel.findOne({ username });
 
                   // mongoose return id of user
@@ -92,8 +93,20 @@ export async function register(req, res) {
                     .save()
                     .catch((err) => res.status(500).send({ err }));
 
+                  // crate jwt token ( json web token )
+                  const token = jwt.sign(
+                    {
+                      userId: _id,
+                      username: username,
+                    },
+                    process.env.JWT_SECRET,
+                    { expiresIn: "24h" }
+                  );
+
                   // end return statement
-                  res.status(201).send({ msg: "User Register Successfully" });
+                  res
+                    .status(201)
+                    .send({ msg: "User Register Successfully", token: token });
                 })
                 .catch((error) => res.status(500).send({ error }));
             })
