@@ -1,4 +1,5 @@
 import UserModel from "../model/User.model.js";
+import UserOTPVerification from "../model/UserOTPVerification.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
@@ -73,9 +74,27 @@ export async function register(req, res) {
               // return save result as a response
               user
                 .save()
-                .then((result) =>
-                  res.status(201).send({ msg: "User Register Successfully" })
-                )
+                .then(async (result) => {
+                  const user = await UserModel.findOne({ username });
+
+                  // mongoose return id of user
+                  const { _id } = Object.assign({}, user.toJSON());
+
+                  // create new entrty for
+                  const userVerification = new UserOTPVerification({
+                    userID: _id,
+                    otp: "",
+                    resetSession: false,
+                  });
+
+                  // save previously created entry
+                  await userVerification
+                    .save()
+                    .catch((err) => res.status(500).send({ err }));
+
+                  // end return statement
+                  res.status(201).send({ msg: "User Register Successfully" });
+                })
                 .catch((error) => res.status(500).send({ error }));
             })
             .catch((error) => {
@@ -141,18 +160,39 @@ export async function login(req, res) {
 
 /** GET: http://localhost:8080/api/user/example123 */
 export async function getUser(req, res) {
-  const { username } = req.params;
-
   try {
-    const user = await UserModel.findOne({ username });
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
 
-    if (!user) return res.status(404).send({ error: "Couldn't find the user" });
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
 
-    /** remove password from user */
-    // mongoose return unnecessary data with object so convert it into json
-    const { password, ...rest } = Object.assign({}, user.toJSON());
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
 
-    return res.status(201).send(rest);
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+      const username = decoded.username;
+
+      // fetch user from user model and user authentication detail from userOTPVerification model
+      const user = await UserModel.findOne({ _id: userID });
+
+      if (!user)
+        return res.status(404).send({ error: "Couldn't find the user" });
+
+      /** remove password from user */
+      // mongoose return unnecessary data with object so convert it into json
+      const { password, ...rest } = Object.assign({}, user.toJSON());
+
+      // all went good return status 201
+      return res.status(201).send(rest);
+    });
   } catch (error) {
     return res.status(404).send({ error });
   }
@@ -171,61 +211,170 @@ body: {
 export async function updateUser(req, res) {
   try {
     // const id = req.query.id;
-    const { userId } = req.user;
+    // const { userId } = req.user;
 
-    if (userId) {
-      const body = req.body;
-      // update the data
-      UserModel.updateOne({ _id: userId }, body, function (err, data) {
-        if (err) throw err;
-        return res.status(201).send({ msg: "Record updated...!" });
-      });
-    } else {
-      return res.status(401).send({ error: "User not found...!" });
-    }
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
+
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
+
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+      const username = decoded.username;
+
+      if (userID) {
+        const body = req.body;
+
+        // update the data
+        UserModel.updateOne({ _id: userID }, body, function (err, data) {
+          if (err) throw err;
+          return res.status(201).send({ msg: "Record updated...!" });
+        });
+      } else {
+        return res.status(401).send({ error: "User not found...!" });
+      }
+    });
   } catch (error) {
     return res.status(401).send({ error: error });
   }
 }
 
-/** GET: http://localhost:8080/api/generateOTP */
+/** GET: http://localhost:8080/api/generateOTP
+* @param: {
+  "username" : example123,
+  "userID" : "654f1e31e6da5765757c9181"
+} */
 export async function generateOTP(req, res) {
-  req.app.locals.OTP = await otpGenerator.generate(6, {
-    lowerCaseAlphabets: false,
-    upperCaseAlphabets: false,
-    specialChars: false,
-  });
-  res.status(201).send({ code: req.app.locals.OTP });
+  try {
+    // take user Id from query
+    // const { userID } = req.query;
+
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
+
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
+
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+      const username = decoded.username;
+
+      // fetch user from user model and user authentication detail from userOTPVerification model
+      const user = await UserModel.findOne({ _id: userID });
+      const userAuthentication = await UserOTPVerification.findOne({ userID });
+
+      // if user and userAuthentication is undefined that means user does not exists!
+      if (!user || !userAuthentication)
+        return res.status(404).send({ error: "User Not Found!" });
+
+      // create otp
+      const otp = await otpGenerator.generate(6, {
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
+
+      // update entriy with same useID
+      UserOTPVerification.updateOne(
+        { userID },
+        {
+          otp: otp,
+          resetSession: false,
+        },
+        function (err, data) {
+          if (err) throw err;
+        }
+      );
+
+      // all went good return status 201
+      res.status(201).send({ msg: `OTP is sent` });
+    });
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 }
 
 /** GET: http://localhost:8080/api/verifyOTP */
 export async function verifyOTP(req, res) {
-  const { code, userId } = req.query;
+  try {
+    const { code } = req.query;
 
-  const isUser = await UserModel.findOne({ _id: userId });
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
 
-  if (!isUser) {
-    return res.status(404).send({ error: "No User Found" });
-  }
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
 
-  // if (isUser.isAuthenticated) {
-  //   return res.status(400).send({ error: "User Already Authenticated" });
-  // }
-
-  if (parseInt(req.app.locals.OTP) === parseInt(code)) {
-    req.app.locals.OTP = null; // reset the OTP value
-    req.app.locals.resetSession = true; // start session for reset password
-    // update the data
-    UserModel.updateOne(
-      { _id: userId },
-      { isAuthenticated: true },
-      function (err, data) {
-        if (err) throw err;
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
       }
-    );
-    return res.status(201).send({ msg: "Verify Successsfully!" });
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+      const username = decoded.username;
+
+      const isUser = await UserModel.findOne({ _id: userID });
+      const userAuthentication = await UserOTPVerification.findOne({ userID });
+
+      if (!isUser) {
+        return res.status(404).send({ error: "No User Found" });
+      }
+
+      if (userAuthentication.otp === code) {
+        // update the data in userOTPVerification otp to empty string and resetSession to true
+        // resetSession true means now user can reset password
+        UserOTPVerification.updateOne(
+          { userID },
+          { otp: "", resetSession: true },
+          function (err, data) {
+            if (err) throw err;
+          }
+        );
+
+        // update the data in UserModel set isAuthenticated to true
+        // if isAuthenticated is true that means user has successfully verified otp method
+        if (!isUser.isAuthenticated) {
+          UserModel.updateOne(
+            { _id: userID },
+            { isAuthenticated: true },
+            function (err, data) {
+              if (err) throw err;
+            }
+          );
+        }
+
+        return res.status(201).send({ msg: "Verify Successsfully!" });
+      }
+
+      return res.status(400).send({ error: "Invalid OTP" });
+    });
+  } catch (err) {
+    return res.status(500).send({ error: "Something went wrong!" });
   }
-  return res.status(400).send({ error: "Invalid OTP" });
 }
 
 // successfully redirect user when OTP is valid
