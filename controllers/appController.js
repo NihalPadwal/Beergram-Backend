@@ -391,39 +391,74 @@ export async function createResetSession(req, res) {
 /** PUT: http://localhost:8080/api/resetPassword */
 export async function resetPassword(req, res) {
   try {
-    if (!req.app.locals.resetSession)
-      return res.status(440).send({ error: "Session expired!" });
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
 
-    const { username, password } = req.body;
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
 
-    try {
-      UserModel.findOne({ username })
-        .then((user) => {
-          bcrypt
-            .hash(password, 10)
-            .then((hashedPassword) => {
-              UserModel.updateOne(
-                { username: user.username },
-                { password: hashedPassword },
-                function (err, data) {
-                  if (err) throw err;
-                  req.app.locals.resetSession = false;
-                  return res.status(201).send({ error: "Record Updated...!" });
-                }
-              );
-            })
-            .catch((error) => {
-              return res
-                .status(500)
-                .send({ error: "Unable to hashed password" });
-            });
-        })
-        .catch((error) => {
-          return res.status(404).send({ error: "Username not Found!" });
-        });
-    } catch (error) {
-      return res.status(500).send({ error });
-    }
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+      const username = decoded.username;
+
+      const { password } = req.body;
+
+      const userAuthentication = await UserOTPVerification.findOne({ userID });
+
+      if (!userAuthentication.resetSession)
+        return res.status(440).send({ error: "Session expired!" });
+
+      try {
+        UserModel.findOne({ _id: userID })
+          .then((user) => {
+            bcrypt
+              .hash(password, 10)
+              .then((hashedPassword) => {
+                UserModel.updateOne(
+                  { username: username },
+                  { password: hashedPassword },
+                  async function (err, data) {
+                    if (err) throw err;
+                    // req.app.locals.resetSession = false;
+                    const userAuthentication =
+                      await UserOTPVerification.findOne({ userID });
+                    // update the data in userOTPVerification resetSession to true
+                    // resetSession true means now user can reset password
+                    UserOTPVerification.updateOne(
+                      { userID },
+                      { resetSession: false },
+                      function (err, data) {
+                        if (err) throw err;
+                      }
+                    );
+                    return res
+                      .status(201)
+                      .send({ error: "Record Updated...!" });
+                  }
+                );
+              })
+              .catch((error) => {
+                return res
+                  .status(500)
+                  .send({ error: "Unable to hashed password" });
+              });
+          })
+          .catch((error) => {
+            return res.status(404).send({ error: "Username not Found!" });
+          });
+      } catch (error) {
+        return res.status(500).send({ error });
+      }
+    });
   } catch (error) {
     return res.status(401).send({ error });
   }
