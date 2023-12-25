@@ -5,6 +5,7 @@ export const PostSchema = new mongoose.Schema({
   isImage: { type: Boolean, required: [true, "isImage is required"] },
   isVideo: { type: Boolean, required: [true, "isVideo is required"] },
   contentUrl: { type: String, required: [true, "content url is required"] },
+  caption: { type: String },
   likeCount: { type: Number, required: [true, "like count is required"] },
   commentCount: { type: Number, required: [true, "comment count is required"] },
 });

@@ -502,8 +502,15 @@ export async function resetPassword(req, res) {
 */
 export async function createPost(req, res) {
   try {
-    const { userID, isImage, isVideo, contentUrl, likeCount, commentCount } =
-      req.body;
+    const {
+      userID,
+      isImage,
+      isVideo,
+      contentUrl,
+      likeCount,
+      commentCount,
+      caption,
+    } = req.body;
 
     const post = new PostModel({
       userID,
@@ -512,6 +519,7 @@ export async function createPost(req, res) {
       contentUrl: contentUrl || "",
       likeCount: likeCount || 0,
       commentCount: commentCount || 0,
+      caption: caption || "",
     });
 
     // return save result as a response
