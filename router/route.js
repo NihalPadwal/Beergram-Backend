@@ -23,6 +23,7 @@ router.route("/user").get(controller.getUser); // user with response
 router.route("/generateOTP").get(controller.generateOTP); // generate random OTP
 router.route("/verifyOTP").get(controller.verifyOTP); // verify generate OTP
 router.route("/createResetSession").get(controller.createResetSession); // reset all the variables
+router.route("/posts").get(controller.getPosts); // posts with response
 
 // PUT METHODS
 // AUTH

@@ -184,7 +184,11 @@ export async function login(req, res) {
   }
 }
 
-/** GET: http://localhost:8080/api/user/example123 */
+/** GET: http://localhost:8080/api/user 
+ * @param : {
+  "Authentication" : "Bearer ${token}",
+}
+*/
 export async function getUser(req, res) {
   try {
     // if in-correct or no token return status 500
@@ -490,6 +494,8 @@ export async function resetPassword(req, res) {
   }
 }
 
+// FOR POSTS
+
 /** POST: http://localhost:8080/api/createPost 
  * @param : {
   "userID" : "asd234DG@hdh1D(asd",
@@ -532,5 +538,44 @@ export async function createPost(req, res) {
       .catch((error) => res.status(500).send({ error }));
   } catch (error) {
     return res.status(500).send(error);
+  }
+}
+
+/** GET: http://localhost:8080/api/posts 
+ * @param : {
+  "Authentication" : "Bearer ${token}",
+}
+*/
+export async function getPosts(req, res) {
+  try {
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
+
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
+
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+
+      // fetch posts from post model using token
+      const posts = await PostModel.find({ userID: userID });
+
+      if (!posts)
+        return res.status(404).send({ error: "Couldn't find the user" });
+
+      // all went good return status 201
+      return res.status(201).send(posts);
+    });
+  } catch (error) {
+    return res.status(404).send({ error });
   }
 }
