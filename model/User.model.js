@@ -18,10 +18,14 @@ export const UserSchema = new mongoose.Schema({
   },
   firstName: { type: String },
   lastName: { type: String },
-  mobile: { type: Number },
+  mobile: { type: String },
   address: { type: Number },
   profile: { type: Number },
   isAuthenticated: { type: Boolean },
+  followerCount: { type: Number },
+  followingCount: { type: Number },
+  postsCount: { type: Number },
+  info: { type: String },
 });
 
 export default mongoose.model.Users || mongoose.model("User", UserSchema);

@@ -1,9 +1,12 @@
+// Models
 import UserModel from "../model/User.model.js";
-import UserOTPVerification from "../model/UserOTPVerification.model.js";
+import UserOTPVerification from "../model/Posts.model.js";
+import PostModel from "../model/Posts.model.js";
+
+// Plugins
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
-
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -31,6 +34,10 @@ export async function verifyUser(req, res, next) {
   "mobile": 8009860560,
   "address" : "Apt. 556, Kulas Light, Gwenborough",
   "profile": ""
+  "followerCount": 0,
+  "followingCount": 0,
+  "postsCount": 0,
+  "info": "desc",
 }
 */
 export async function register(req, res) {
@@ -68,7 +75,13 @@ export async function register(req, res) {
                 password: hashedPassword,
                 profile: profile || "",
                 email,
+                mobile: "",
                 isAuthenticated: false,
+                address: "",
+                followerCount: 0,
+                followingCount: 0,
+                postsCount: 0,
+                info: "",
               });
 
               // return save result as a response
@@ -474,5 +487,42 @@ export async function resetPassword(req, res) {
     });
   } catch (error) {
     return res.status(401).send({ error });
+  }
+}
+
+/** POST: http://localhost:8080/api/createPost 
+ * @param : {
+  "userID" : "asd234DG@hdh1D(asd",
+  "isImage" : "true",
+  "isVideo": "false",
+  "contentUrl" : "www.content.com",
+  "likeCount": "0",
+  "commentCount": 0,
+}
+*/
+export async function createPost(req, res) {
+  try {
+    const { userID, isImage, isVideo, contentUrl, likeCount, commentCount } =
+      req.body;
+
+    const post = new PostModel({
+      userID,
+      isImage: isImage || false,
+      isVideo: isVideo || false,
+      contentUrl: contentUrl || "",
+      likeCount: likeCount || 0,
+      commentCount: commentCount || 0,
+    });
+
+    // return save result as a response
+    post
+      .save()
+      .then(async (result) => {
+        // end return statement
+        res.status(201).send({ msg: "Post Created Successfully" });
+      })
+      .catch((error) => res.status(500).send({ error }));
+  } catch (error) {
+    return res.status(500).send(error);
   }
 }
