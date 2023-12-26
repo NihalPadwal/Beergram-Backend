@@ -1,6 +1,6 @@
 // Models
 import UserModel from "../model/User.model.js";
-import UserOTPVerification from "../model/Posts.model.js";
+import UserOTPVerification from "../model/UserOTPVerification.model.js";
 import PostModel from "../model/Posts.model.js";
 
 // Plugins
