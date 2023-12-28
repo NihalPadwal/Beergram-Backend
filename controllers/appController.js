@@ -653,7 +653,9 @@ export async function likeComment(req, res) {
 
     if (!comment) return res.status(404).send({ error: "Comment Not Found!" });
 
-    const likedByList = [...new Set([...comment.likedBy, likedById])];
+    const likedByList = comment.likedBy.includes(likedById)
+      ? comment.likedBy.filter((item) => item != likedById)
+      : [...comment.likedBy, likedById];
 
     // update entriy with same useID
     CommentsModel.updateOne(
