@@ -2,6 +2,7 @@
 import UserModel from "../model/User.model.js";
 import UserOTPVerification from "../model/UserOTPVerification.model.js";
 import PostModel from "../model/Posts.model.js";
+import CommentsModel from "../model/Comments.model.js";
 
 // Plugins
 import bcrypt from "bcrypt";
@@ -144,7 +145,6 @@ export async function register(req, res) {
   "password" : "admin123"
 }
 */
-
 export async function login(req, res) {
   const { username, password } = req.body;
   try {
@@ -498,6 +498,7 @@ export async function resetPassword(req, res) {
 
 /** POST: http://localhost:8080/api/createPost 
  * @param : {
+  "username": "Nihal",
   "userID" : "asd234DG@hdh1D(asd",
   "isImage" : "true",
   "isVideo": "false",
@@ -575,6 +576,94 @@ export async function getPosts(req, res) {
       // all went good return status 201
       return res.status(201).send(posts);
     });
+  } catch (error) {
+    return res.status(404).send({ error });
+  }
+}
+
+/** POST: http://localhost:8080/api/createComment 
+ * @param : {
+  "username": "Nihal",
+  "postId" : "asd234DG@hdh1D(asd",
+  "comment" : "First Comment",
+  "likes": "10",
+  "repliedToID" : "c2as92##asdj",
+}
+*/
+export async function createComment(req, res) {
+  try {
+    const { postId, comment, likes, repliedToID } = req.body;
+
+    const comments = new CommentsModel({
+      postId,
+      comment: comment,
+      likes: likes,
+      repliedToID: repliedToID || "",
+    });
+
+    // return save result as a response
+    comments
+      .save()
+      .then(async (result) => {
+        // end return statement
+        res.status(201).send({ msg: "Comments Created Successfully" });
+      })
+      .catch((error) => res.status(500).send({ error }));
+  } catch (error) {
+    return res.status(500).send(error);
+  }
+}
+
+/** GET: http://localhost:8080/api/comments 
+ * @param : {
+  "postId": "asd234DG@hdh1D(asd"
+}
+*/
+export async function getComments(req, res) {
+  try {
+    const { postId } = req.body;
+
+    // fetch posts from post model using token
+    const comments = await CommentsModel.find({ postId });
+
+    if (!comments)
+      return res.status(404).send({ error: "Couldn't find the comment" });
+
+    return res.status(201).send(comments);
+  } catch (error) {
+    return res.status(404).send({ error });
+  }
+}
+
+/** PUT: http://localhost:8080/api/likeComment 
+ * @param : {
+  "id": "asd234DG@hdh1D(asd"
+}
+*/
+export async function likeComment(req, res) {
+  try {
+    const { id, likes } = req.body;
+
+    if (!id || !likes)
+      return res.status(404).send({ error: "Id and likes are required" });
+
+    // fetch posts from post model using token
+    const comment = await CommentsModel.findOne({ _id: id });
+
+    if (!comment) return res.status(404).send({ error: "Comment Not Found!" });
+
+    // update entriy with same useID
+    CommentsModel.updateOne(
+      { _id: id },
+      {
+        likes,
+      },
+      function (err, data) {
+        if (err) throw err;
+      }
+    );
+
+    return res.status(201).send("Updated likes on comment");
   } catch (error) {
     return res.status(404).send({ error });
   }

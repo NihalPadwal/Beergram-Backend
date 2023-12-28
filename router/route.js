@@ -16,6 +16,9 @@ router
 router.route("/login").post(controller.verifyUser, controller.login); // login in app
 // POSTS
 router.route("/createPost").post(controller.verifyUser, controller.createPost); // created posts
+router
+  .route("/createComment")
+  .post(controller.verifyUser, controller.createComment); // created comments
 
 // GET METHODS
 // AUTH
@@ -24,6 +27,7 @@ router.route("/generateOTP").get(controller.generateOTP); // generate random OTP
 router.route("/verifyOTP").get(controller.verifyOTP); // verify generate OTP
 router.route("/createResetSession").get(controller.createResetSession); // reset all the variables
 router.route("/posts").get(controller.getPosts); // posts with response
+router.route("/comments").get(controller.getComments); // posts with response
 
 // PUT METHODS
 // AUTH
@@ -31,5 +35,6 @@ router.route("/updateuser").put(Auth, controller.updateUser); // is used to upda
 router
   .route("/resetPassword")
   .put(controller.verifyUser, controller.resetPassword); // is used to reset password
+router.route("/likeComment").put(Auth, controller.likeComment); // is used to update the user profile
 
 export default router;
