@@ -621,7 +621,7 @@ export async function createComment(req, res) {
 */
 export async function getComments(req, res) {
   try {
-    const { postId } = req.body;
+    const { postId } = req.query;
 
     // fetch posts from post model using token
     const comments = await CommentsModel.find({ postId });
