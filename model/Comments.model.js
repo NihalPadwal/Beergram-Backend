@@ -5,6 +5,7 @@ export const CommentSchema = new mongoose.Schema({
   comment: { type: String, required: [true, "Please provide comment"] },
   likes: { type: Number, default: 0 },
   repliedToID: { type: String },
+  likedBy: { type: [String] },
 });
 
 export default mongoose.model.Comment ||

@@ -637,12 +637,13 @@ export async function getComments(req, res) {
 
 /** PUT: http://localhost:8080/api/likeComment 
  * @param : {
-  "id": "asd234DG@hdh1D(asd"
+  "id": "asd234DG@hdh1D(asd",
+  "likedById" : "v203asd2'hda"
 }
 */
 export async function likeComment(req, res) {
   try {
-    const { id, likes } = req.body;
+    const { id, likes, likedById } = req.body;
 
     if (!id || !likes)
       return res.status(404).send({ error: "Id and likes are required" });
@@ -652,11 +653,14 @@ export async function likeComment(req, res) {
 
     if (!comment) return res.status(404).send({ error: "Comment Not Found!" });
 
+    const likedByList = [...new Set([...comment.likedBy, likedById])];
+
     // update entriy with same useID
     CommentsModel.updateOne(
       { _id: id },
       {
         likes,
+        likedBy: likedByList,
       },
       function (err, data) {
         if (err) throw err;
