@@ -20,7 +20,7 @@ export const UserSchema = new mongoose.Schema({
   lastName: { type: String },
   mobile: { type: String },
   address: { type: Number },
-  profile: { type: Number },
+  profile: { type: String },
   isAuthenticated: { type: Boolean },
   followerCount: { type: Number },
   followingCount: { type: Number },
