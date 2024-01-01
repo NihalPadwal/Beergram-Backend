@@ -209,9 +209,13 @@ export async function getUser(req, res) {
       // Token is valid, and 'decoded' contains the payload
       const userID = decoded.userId;
       const username = decoded.username;
+      const usernameByPara = req.query.username;
+      const isLoggedUser = username === usernameByPara;
 
       // fetch user from user model and user authentication detail from userOTPVerification model
-      const user = await UserModel.findOne({ _id: userID });
+      const user = await UserModel.findOne(
+        usernameByPara ? { username: usernameByPara } : { _id: userID }
+      );
 
       if (!user)
         return res.status(404).send({ error: "Couldn't find the user" });
@@ -221,7 +225,7 @@ export async function getUser(req, res) {
       const { password, ...rest } = Object.assign({}, user.toJSON());
 
       // all went good return status 201
-      return res.status(201).send(rest);
+      return res.status(201).send({ ...rest, isLoggedUser: isLoggedUser });
     });
   } catch (error) {
     return res.status(404).send({ error });
