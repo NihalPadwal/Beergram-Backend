@@ -570,6 +570,28 @@ export async function getPosts(req, res) {
 
       // Token is valid, and 'decoded' contains the payload
       const userID = decoded.userId;
+      const usernameByPara = req.query.username;
+
+      if (usernameByPara) {
+        // fetch user from user model and user authentication detail from userOTPVerification model
+        const user = await UserModel.findOne({ username: usernameByPara });
+
+        if (!user)
+          return res.status(404).send({ error: "Couldn't find the user" });
+
+        /** remove password from user */
+        // mongoose return unnecessary data with object so convert it into json
+        const { _id } = Object.assign({}, user.toJSON());
+
+        // fetch posts from post model using token
+        const posts = await PostModel.find({ userID: _id });
+
+        if (!posts)
+          return res.status(404).send({ error: "Couldn't find the user" });
+
+        // all went good return status 201
+        return res.status(201).send(posts);
+      }
 
       // fetch posts from post model using token
       const posts = await PostModel.find({ userID: userID });
