@@ -700,3 +700,33 @@ export async function likeComment(req, res) {
     return res.status(404).send({ error });
   }
 }
+
+/** GET: http://localhost:8080/api/searchUsers 
+ * @param : {
+  "username" : "Nihal",
+  "Authentication" : "Bearer ${token}",
+}
+*/
+export async function searchUsers(req, res) {
+  try {
+    const { username } = req.query;
+
+    if (!username) {
+      return res
+        .status(400)
+        .send({ error: "Username is required for search." });
+    }
+
+    // Search for users with matching usernames, limit to 10, and sort by followers in descending order
+    const users = await UserModel.find({
+      username: { $regex: username, $options: "i" },
+    })
+      .limit(10)
+      .sort({ followerCount: -1 });
+
+    res.status(200).send(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+}

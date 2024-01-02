@@ -28,6 +28,7 @@ router.route("/verifyOTP").get(controller.verifyOTP); // verify generate OTP
 router.route("/createResetSession").get(controller.createResetSession); // reset all the variables
 router.route("/posts").get(controller.getPosts); // posts with response
 router.route("/comments").get(controller.getComments); // posts with response
+router.route("/searchUsers").get(controller.searchUsers);
 
 // PUT METHODS
 // AUTH
