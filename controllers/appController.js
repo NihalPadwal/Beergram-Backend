@@ -755,8 +755,6 @@ export async function followUser(req, res) {
   try {
     const { toUser } = req.body;
 
-    console.log(toUser);
-
     if (!toUser) return res.status(404).send({ error: "toUser are required" });
 
     // if in-correct or no token return status 500
