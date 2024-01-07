@@ -211,11 +211,12 @@ export async function getUser(req, res) {
       const username = decoded.username;
       const usernameByPara = req.query.username;
       const isLoggedUser = username === usernameByPara;
+      const selectedUser = req.query.selectedUserId || "";
 
       // fetch user from user model and user authentication detail from userOTPVerification model
       const user = await UserModel.findOne(
         usernameByPara ? { username: usernameByPara } : { _id: userID }
-      );
+      ).select("-followingList -followerList -mobile -address");
 
       if (!user)
         return res.status(404).send({ error: "Couldn't find the user" });
@@ -224,8 +225,18 @@ export async function getUser(req, res) {
       // mongoose return unnecessary data with object so convert it into json
       const { password, ...rest } = Object.assign({}, user.toJSON());
 
+      // if already follower value
+      // const isAlreadyFollower = user.followingList.some(
+      //   (obj) => obj === selectedUser
+      // );
+      // console.log(user, user.followingList, selectedUser, isAlreadyFollower);
+
       // all went good return status 201
-      return res.status(201).send({ ...rest, isLoggedUser: isLoggedUser });
+      return res.status(201).send({
+        ...rest,
+        isLoggedUser: isLoggedUser,
+        // isAlreadyFollower: isAlreadyFollower,
+      });
     });
   } catch (error) {
     return res.status(404).send({ error });
@@ -813,6 +824,58 @@ export async function followUser(req, res) {
       return res
         .status(201)
         .send({ message: "Follow request completed successfully" });
+    });
+  } catch (error) {
+    return res.status(404).send({ error });
+  }
+}
+
+/** GET: http://localhost:8080/api/getIsUserAlreadyFollower 
+ * @param : {
+  "Authentication" : "Bearer ${token}",
+  "selectedUser": "asdcvjwq2e12"
+}
+*/
+export async function getIsUserAlreadyFollower(req, res) {
+  try {
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
+
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
+
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+      const selectedUser = req.query.selectedUser;
+
+      // fetch user from user model and user authentication detail from userOTPVerification model
+      const user = await UserModel.findOne({
+        _id: userID,
+      }).select("followingList");
+
+      const followersArray = user.followingList;
+
+      const isFollowed = followersArray.some((obj) => obj === selectedUser);
+
+      if (!user)
+        return res.status(404).send({ error: "Couldn't find the user" });
+
+      /** remove password from user */
+      // mongoose return unnecessary data with object so convert it into json
+
+      // all went good return status 201
+      return res.status(201).send({
+        isFollowed,
+      });
     });
   } catch (error) {
     return res.status(404).send({ error });
