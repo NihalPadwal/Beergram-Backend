@@ -723,7 +723,9 @@ export async function searchUsers(req, res) {
     })
       .limit(10)
       .sort({ followerCount: -1 })
-      .select("-password");
+      .select(
+        "-password -isAuthenticated -info -isAuthenticated -mobile -address"
+      );
 
     res.status(200).send(users);
   } catch (error) {
