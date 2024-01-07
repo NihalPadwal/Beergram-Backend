@@ -664,6 +664,7 @@ export async function getComments(req, res) {
 /** PUT: http://localhost:8080/api/likeComment 
  * @param : {
   "id": "asd234DG@hdh1D(asd",
+  "likes": 1,
   "likedById" : "v203asd2'hda"
 }
 */
@@ -731,5 +732,69 @@ export async function searchUsers(req, res) {
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: "Internal Server Error" });
+  }
+}
+
+/** PUT: http://localhost:8080/api/followUser 
+ * @param : {
+  "fromUser": "asd234DG@hdh1Dasd",          // follow request from user
+  "toUser" : "v203asd2hda"              // follow request to follow user
+}
+*/
+export async function followUser(req, res) {
+  try {
+    const { fromUser, toUser } = req.body;
+
+    if (!fromUser || !toUser)
+      return res
+        .status(404)
+        .send({ error: "fromUser and toUser are required" });
+
+    // fetch users (user who want to follow [fromUserModel], user who gets new follower[toUserModel]) from post model using token
+    const fromUserModel = await UserModel.findOne({ _id: fromUser });
+    const toUserModel = await UserModel.findOne({ _id: toUser });
+
+    if (!fromUserModel)
+      return res.status(404).send({ error: "from User Model Not Found!" });
+    if (!toUserModel)
+      return res.status(404).send({ error: "to User Model Not Found!" });
+
+    // change user who wants to follow following list
+    const fromUserFollowingList = fromUserModel.followingList.includes(toUser)
+      ? fromUserModel.followingList.filter((item) => item != toUser)
+      : [...fromUserModel.followingList, toUser];
+
+    // change user who gets a follower follower list
+    const toUserFollowerList = toUserModel.followerList.includes(fromUser)
+      ? toUserModel.followerList.filter((item) => item != fromUser)
+      : [...toUserModel.followerList, fromUser];
+
+    // update fromUserModel entriy with same useID
+    fromUserModel.updateOne(
+      { _id: fromUser },
+      {
+        followingCount: fromUserFollowingList.length,
+        followingList: fromUserFollowingList,
+      },
+      function (err, data) {
+        if (err) throw err;
+      }
+    );
+
+    // update toUserModel entriy with same useID
+    toUserModel.updateOne(
+      { _id: toUser },
+      {
+        followerCount: toUserFollowerList.length,
+        followerList: toUserFollowerList,
+      },
+      function (err, data) {
+        if (err) throw err;
+      }
+    );
+
+    return res.status(201).send("Follow request completed successfully");
+  } catch (error) {
+    return res.status(404).send({ error });
   }
 }

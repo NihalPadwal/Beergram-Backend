@@ -23,7 +23,9 @@ export const UserSchema = new mongoose.Schema({
   profile: { type: String },
   isAuthenticated: { type: Boolean },
   followerCount: { type: Number },
+  followerList: { type: [String] },
   followingCount: { type: Number },
+  followingList: { type: [String] },
   postsCount: { type: Number },
   info: { type: String },
 });

@@ -37,5 +37,6 @@ router
   .route("/resetPassword")
   .put(controller.verifyUser, controller.resetPassword); // is used to reset password
 router.route("/likeComment").put(Auth, controller.likeComment); // is used to update the user profile
+router.route("/followUser").put(Auth, controller.followUser); // is used to update the user profile
 
 export default router;
