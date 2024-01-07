@@ -722,7 +722,8 @@ export async function searchUsers(req, res) {
       username: { $regex: username, $options: "i" },
     })
       .limit(10)
-      .sort({ followerCount: -1 });
+      .sort({ followerCount: -1 })
+      .select("-password");
 
     res.status(200).send(users);
   } catch (error) {
