@@ -32,6 +32,7 @@ router.route("/searchUsers").get(controller.searchUsers); // get users from sear
 router
   .route("/getIsUserAlreadyFollower")
   .get(Auth, controller.getIsUserAlreadyFollower); // get if user is already a follower
+router.route("/userStats").get(controller.getUserStats); // user with response
 
 // PUT METHODS
 // AUTH

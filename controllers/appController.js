@@ -878,3 +878,54 @@ export async function getIsUserAlreadyFollower(req, res) {
     return res.status(404).send({ error });
   }
 }
+
+/** GET: http://localhost:8080/api/getUserStats 
+ * @param : {
+  "Authentication" : "Bearer ${token}",
+}
+*/
+export async function getUserStats(req, res) {
+  try {
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
+
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
+
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
+
+      // fetch user from user model and user authentication detail from userOTPVerification model
+      const user = await UserModel.findOne({ _id: userID }).select(
+        "followerCount followingCount"
+      );
+
+      // fetch posts from post model using token
+      const posts = await PostModel.find({ userID: userID });
+
+      if (!user)
+        return res.status(404).send({ error: "Couldn't find the user" });
+
+      /** remove password from user */
+      // mongoose return unnecessary data with object so convert it into json
+      const { password, ...rest } = Object.assign({}, user.toJSON());
+
+      // all went good return status 201
+      return res.status(201).send({
+        ...rest,
+        postLength: posts.length,
+      });
+    });
+  } catch (error) {
+    return res.status(404).send({ error });
+  }
+}
