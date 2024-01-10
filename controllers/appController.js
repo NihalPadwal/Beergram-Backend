@@ -548,8 +548,11 @@ export async function createPost(req, res) {
     post
       .save()
       .then(async (result) => {
+        console.log(result);
         // end return statement
-        res.status(201).send({ msg: "Post Created Successfully" });
+        res
+          .status(201)
+          .send({ msg: "Post Created Successfully", data: result });
       })
       .catch((error) => res.status(500).send({ error }));
   } catch (error) {
