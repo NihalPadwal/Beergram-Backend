@@ -906,14 +906,18 @@ export async function getUserStats(req, res) {
 
       // Token is valid, and 'decoded' contains the payload
       const userID = decoded.userId;
+      const usernameByPara = req.query.username;
 
       // fetch user from user model and user authentication detail from userOTPVerification model
-      const user = await UserModel.findOne({ _id: userID }).select(
-        "followerCount followingCount"
-      );
+      const user = await UserModel.findOne(
+        usernameByPara ? { username: usernameByPara } : { _id: userID }
+      ).select("followerCount followingCount");
+
+      if (!user)
+        return res.status(404).send({ error: "Couldn't find the user" });
 
       // fetch posts from post model using token
-      const posts = await PostModel.find({ userID: userID });
+      const posts = await PostModel.find({ userID: user._id });
 
       if (!user)
         return res.status(404).send({ error: "Couldn't find the user" });
