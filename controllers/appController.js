@@ -211,7 +211,6 @@ export async function getUser(req, res) {
       const username = decoded.username;
       const usernameByPara = req.query.username;
       const isLoggedUser = username === usernameByPara;
-      const selectedUser = req.query.selectedUserId || "";
 
       // fetch user from user model and user authentication detail from userOTPVerification model
       const user = await UserModel.findOne(
@@ -225,17 +224,10 @@ export async function getUser(req, res) {
       // mongoose return unnecessary data with object so convert it into json
       const { password, ...rest } = Object.assign({}, user.toJSON());
 
-      // if already follower value
-      // const isAlreadyFollower = user.followingList.some(
-      //   (obj) => obj === selectedUser
-      // );
-      // console.log(user, user.followingList, selectedUser, isAlreadyFollower);
-
       // all went good return status 201
       return res.status(201).send({
         ...rest,
         isLoggedUser: isLoggedUser,
-        // isAlreadyFollower: isAlreadyFollower,
       });
     });
   } catch (error) {
@@ -632,13 +624,14 @@ export async function getPosts(req, res) {
 */
 export async function createComment(req, res) {
   try {
-    const { postId, comment, likes, repliedToID } = req.body;
+    const { postId, comment, likes, repliedToID, commentorId } = req.body;
 
     const comments = new CommentsModel({
       postId,
       comment: comment,
       likes: likes,
       repliedToID: repliedToID || "",
+      commentorId: commentorId,
     });
 
     // return save result as a response
