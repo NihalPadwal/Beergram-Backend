@@ -33,6 +33,7 @@ router
   .route("/getIsUserAlreadyFollower")
   .get(Auth, controller.getIsUserAlreadyFollower); // get if user is already a follower
 router.route("/userStats").get(controller.getUserStats); // user with response
+router.route("/userid").get(Auth, controller.getUserId); // user with response
 
 // PUT METHODS
 // AUTH
