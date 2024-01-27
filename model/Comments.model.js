@@ -6,7 +6,7 @@ export const CommentSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   repliedToID: { type: String },
   likedBy: { type: [String] },
-  commentorId: { type: String },
+  commentorId: { type: String, ref: "User" },
 });
 
 export default mongoose.model.Comment ||

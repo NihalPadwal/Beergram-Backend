@@ -657,7 +657,10 @@ export async function getComments(req, res) {
     const { postId } = req.query;
 
     // fetch posts from post model using token
-    const comments = await CommentsModel.find({ postId });
+    const comments = await CommentsModel.find({ postId }).populate(
+      "commentorId",
+      "username profile"
+    );
 
     if (!comments)
       return res.status(404).send({ error: "Couldn't find the comment" });
