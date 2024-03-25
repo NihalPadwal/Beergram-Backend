@@ -996,12 +996,26 @@ export async function getFeed(req, res) {
 
       // Token is valid, and 'decoded' contains the payload
       const userID = decoded.userId;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = parseInt(req.query.skip) || 0;
+
+      // fetch user from user model and user authentication detail from userOTPVerification model
+      const user = await UserModel.findOne({ _id: userID }).select(
+        "followerList"
+      );
+
+      // followers
+      const followers = await user.followerList;
+
+      // posts
+      const posts = await PostModel.find({ userID: { $in: followers } })
+        // .populate('author', 'username')
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(limit);
 
       // all went good return status 201
-      return res.status(201).send({
-        userID,
-        username,
-      });
+      return res.status(201).send({ posts });
     });
   } catch (error) {
     return res.status(404).send({ error });
