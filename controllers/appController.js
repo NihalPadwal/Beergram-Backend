@@ -76,7 +76,7 @@ export async function register(req, res) {
                 password: hashedPassword,
                 profile:
                   profile ||
-                  "https://worksbynihal-social-app.vercel.app/default_icons/profileImg.png",
+                  "https://media.graphassets.com/HNbSl1VcT7Wfh8s4mDW7",
                 email,
                 mobile: "",
                 isAuthenticated: false,
@@ -960,6 +960,42 @@ export async function getUserId(req, res) {
       // Token is valid, and 'decoded' contains the payload
       const userID = decoded.userId;
       const username = decoded.username;
+
+      // all went good return status 201
+      return res.status(201).send({
+        userID,
+        username,
+      });
+    });
+  } catch (error) {
+    return res.status(404).send({ error });
+  }
+}
+
+/** GET: http://localhost:8080/api/getfeed 
+ * @param : {
+  "Authentication" : "Bearer ${token}",
+}
+*/
+export async function getFeed(req, res) {
+  try {
+    // if in-correct or no token return status 500
+    if (!req.headers.authorization)
+      return res.status(500).send({ error: "Please provide correct token" });
+
+    // access authorize header to validate request
+    const token = req.headers.authorization.split(" ")[1];
+
+    // decode token into userId and username
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        // Token verification failed
+        console.error(err);
+        throw err;
+      }
+
+      // Token is valid, and 'decoded' contains the payload
+      const userID = decoded.userId;
 
       // all went good return status 201
       return res.status(201).send({
