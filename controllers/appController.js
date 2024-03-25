@@ -209,10 +209,12 @@ export async function getUser(req, res) {
       }
 
       // Token is valid, and 'decoded' contains the payload
-      const userID = decoded.userId;
+      const userID = req.query.selectedUserId || decoded.userId;
       const username = decoded.username;
       const usernameByPara = req.query.username;
       const isLoggedUser = username === usernameByPara;
+
+      console.log(userID);
 
       // fetch user from user model and user authentication detail from userOTPVerification model
       const user = await UserModel.findOne(
