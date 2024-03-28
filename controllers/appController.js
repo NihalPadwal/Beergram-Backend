@@ -1011,6 +1011,7 @@ export async function getFeed(req, res) {
 
       // posts
       const posts = await PostModel.find({ userID: { $in: followers } })
+        .populate("userID", "username profile")
         // .populate('author', 'username')
         .sort({ timestamp: -1 })
         .skip(skip)
@@ -1019,6 +1020,45 @@ export async function getFeed(req, res) {
       // all went good return status 201
       return res.status(201).send({ posts });
     });
+  } catch (error) {
+    return res.status(404).send({ error });
+  }
+}
+
+/** PUT: http://localhost:8080/api/likePost 
+ * @param : {
+  "id": "asd234DG@hdh1D(asd",
+  "likedById" : "v203asd2'hda"
+}
+*/
+export async function likePost(req, res) {
+  try {
+    const { id, likedById } = req.body;
+
+    if (!id) return res.status(404).send({ error: "Id is required" });
+
+    // fetch post from post model using id
+    const post = await PostModel.findOne({ _id: id });
+
+    if (!post) return res.status(404).send({ error: "Post Not Found!" });
+
+    const likedByList = post.likedBy.includes(likedById)
+      ? post.likedBy.filter((item) => item != likedById)
+      : [...post.likedBy, likedById];
+
+    // update entriy with same useID
+    PostModel.updateOne(
+      { _id: id },
+      {
+        likeCount: likedByList.length,
+        likedBy: likedByList,
+      },
+      function (err, data) {
+        if (err) throw err;
+      }
+    );
+
+    return res.status(201).send({ msg: "Updated likes on post" });
   } catch (error) {
     return res.status(404).send({ error });
   }
