@@ -594,7 +594,9 @@ export async function getPosts(req, res) {
         const { _id } = Object.assign({}, user.toJSON());
 
         // fetch posts from post model using token
-        const posts = await PostModel.find({ userID: _id });
+        const posts = await PostModel.find({ userID: _id })
+          .sort({ createdAt: "desc" })
+          .exec();
 
         if (!posts)
           return res.status(404).send({ error: "Couldn't find the user" });
@@ -604,7 +606,9 @@ export async function getPosts(req, res) {
       }
 
       // fetch posts from post model using token
-      const posts = await PostModel.find({ userID: userID });
+      const posts = await PostModel.find({ userID: userID })
+        .sort({ createdAt: "desc" })
+        .exec();
 
       if (!posts)
         return res.status(404).send({ error: "Couldn't find the user" });
@@ -1003,17 +1007,16 @@ export async function getFeed(req, res) {
 
       // fetch user from user model and user authentication detail from userOTPVerification model
       const user = await UserModel.findOne({ _id: userID }).select(
-        "followerList"
+        "followingList"
       );
 
-      // followers
-      const followers = await user.followerList;
+      // following
+      const following = await user.followingList;
 
       // posts
-      const posts = await PostModel.find({ userID: { $in: followers } })
+      const posts = await PostModel.find({ userID: { $in: following } })
         .populate("userID", "username profile")
-        // .populate('author', 'username')
-        .sort({ timestamp: -1 })
+        .sort({ createdAt: "desc" })
         .skip(skip)
         .limit(limit);
 
